@@ -10,6 +10,7 @@ import csv
 import os
 # 键盘控制
 from pynput.keyboard import Key, Listener
+import threading
 # ------------------------------------------------------
 # 用于存储机器人的命令
 env_commands = [0, 0, 0, 0]  
@@ -65,6 +66,10 @@ def on_press(key):
 def on_release(key):
     if key == Key.esc:  # 按下 'esc' 键退出
         return False
+# 键盘监听函数，放到独立线程中
+def listen_for_keyboard():
+    with Listener(on_press=on_press, on_release=on_release) as listener:
+        listener.join()
 # ------------------------------------------------------
 # 转换数组为字符串
 def array_to_str(arr):
@@ -84,6 +89,14 @@ def get_gravity_orientation(quaternion):
 
     return gravity_orientation
 
+simulation_data = []
+# 处理数据并在仿真结束后批量写入文件
+def save_simulation_data():
+    with open(log_name, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['time', 'dof_pos_target', 'dof_pos_actual', 'dof_tau', 'base_pos', 'base_vel'])
+        for row in simulation_data:
+            writer.writerow(row)
 
 def pd_control(target_q, q, kp, target_dq, dq, kd):
     """Calculates torques from position commands"""
@@ -125,9 +138,9 @@ if __name__ == "__main__":
 
         log_name = config["log_name"]
 
-    # 启动键盘监听
-    listener = Listener(on_press=on_press, on_release=on_release)
-    listener.start()  # 启动监听器
+    # 启动键盘监听线程
+    keyboard_thread = threading.Thread(target=listen_for_keyboard)
+    keyboard_thread.start()
     simulation_time = 0.0
     current_dir = os.getcwd()
     file_path = os.path.join(current_dir, log_name)
@@ -155,67 +168,70 @@ if __name__ == "__main__":
             writer.writerow(['time', 'dof_pos_target', 'dof_pos_actual', 'dof_tau', 'base_pos', 'base_vel'])
         # Close the viewer automatically after simulation_duration wall-seconds.
         start = time.time()
-        while viewer.is_running() and time.time() - start < simulation_duration:
-            simulation_time += simulation_dt
-            cmd[0] = env_commands[0]
-            cmd[1] = env_commands[1]
-            cmd[2] = env_commands[2]
+        try:
+            while viewer.is_running() and time.time() - start < simulation_duration:
+                simulation_time += simulation_dt
+                cmd[0] = env_commands[0]
+                cmd[1] = env_commands[1]
+                cmd[2] = env_commands[2]
 
-            step_start = time.time()
-            tau = pd_control(target_dof_pos, d.qpos[7:], kps, np.zeros_like(kds), d.qvel[6:], kds)
-            d.ctrl[:] = tau
-            # mj_step can be replaced with code that also evaluates
-            # a policy and applies a control signal before stepping the physics.
-            mujoco.mj_step(m, d)
-            counter += 1
-            if counter % control_decimation == 0:
-                # Apply control signal here.
+                step_start = time.time()
+                tau = pd_control(target_dof_pos, d.qpos[7:], kps, np.zeros_like(kds), d.qvel[6:], kds)
+                d.ctrl[:] = tau
+                # mj_step can be replaced with code that also evaluates
+                # a policy and applies a control signal before stepping the physics.
+                mujoco.mj_step(m, d)
+                counter += 1
+                if counter % control_decimation == 0:
+                    # Apply control signal here.
 
-                # create observation
-                qj = d.qpos[7:]
-                dqj = d.qvel[6:]
-                quat = d.qpos[3:7]
-                omega = d.qvel[3:6]
+                    # create observation
+                    qj = d.qpos[7:]
+                    dqj = d.qvel[6:]
+                    quat = d.qpos[3:7]
+                    omega = d.qvel[3:6]
 
-                qj = (qj - default_angles) * dof_pos_scale
-                dqj = dqj * dof_vel_scale
-                gravity_orientation = get_gravity_orientation(quat)
-                omega = omega * ang_vel_scale
+                    qj = (qj - default_angles) * dof_pos_scale
+                    dqj = dqj * dof_vel_scale
+                    gravity_orientation = get_gravity_orientation(quat)
+                    omega = omega * ang_vel_scale
 
-                period = 0.8
-                count = counter * simulation_dt
-                phase = count % period / period
-                sin_phase = np.sin(2 * np.pi * phase)
-                cos_phase = np.cos(2 * np.pi * phase)
+                    period = 0.8
+                    count = counter * simulation_dt
+                    phase = count % period / period
+                    sin_phase = np.sin(2 * np.pi * phase)
+                    cos_phase = np.cos(2 * np.pi * phase)
 
-                obs[:3] = omega #3
-                obs[3:6] = gravity_orientation #3
-                obs[6:9] = cmd * cmd_scale #3
-                obs[9 : 9 + num_actions] = qj #12
-                obs[9 + num_actions : 9 + 2 * num_actions] = dqj #12
-                obs[9 + 2 * num_actions : 9 + 3 * num_actions] = action #12
-                obs[9 + 3 * num_actions : 9 + 3 * num_actions + 2] = np.array([sin_phase, cos_phase]) #2
-                obs_tensor = torch.from_numpy(obs).unsqueeze(0)
-                # policy inference
-                action = policy(obs_tensor).detach().numpy().squeeze()
-                # transform action to target_dof_pos
-                target_dof_pos = action * action_scale + default_angles
+                    obs[:3] = omega #3
+                    obs[3:6] = gravity_orientation #3
+                    obs[6:9] = cmd * cmd_scale #3
+                    obs[9 : 9 + num_actions] = qj #12
+                    obs[9 + num_actions : 9 + 2 * num_actions] = dqj #12
+                    obs[9 + 2 * num_actions : 9 + 3 * num_actions] = action #12
+                    obs_tensor = torch.from_numpy(obs).unsqueeze(0)
+                    # policy inference
+                    action = policy(obs_tensor).detach().numpy().squeeze()
+                    # transform action to target_dof_pos
+                    target_dof_pos = action * action_scale + default_angles
 
-                with open(log_name, 'a', newline='') as csvfile:
-                    writer = csv.writer(csvfile)
-                    # 将 numpy 数组转换为字符串
-                    writer.writerow([simulation_time, 
-                                    array_to_str(target_dof_pos), 
-                                    array_to_str(d.qpos[7:]), 
-                                    array_to_str(tau), 
-                                    array_to_str(d.qpos[:3]), 
-                                    array_to_str(d.qvel[:3])])
+                    # 将数据暂存到内存中
+                    simulation_data.append([simulation_time,
+                                            array_to_str(target_dof_pos), 
+                                            array_to_str(d.qpos[7:]), 
+                                            array_to_str(tau), 
+                                            array_to_str(d.qpos[:3]), 
+                                            array_to_str(d.qvel[:3])])
+                # Pick up changes to the physics state, apply perturbations, update options from GUI.
+                viewer.sync()
 
-            # Pick up changes to the physics state, apply perturbations, update options from GUI.
-            viewer.sync()
+                # Rudimentary time keeping, will drift relative to wall clock.
+                time_until_next_step = m.opt.timestep - (time.time() - step_start)
+                if time_until_next_step > 0:
+                    time.sleep(time_until_next_step)
 
-            # Rudimentary time keeping, will drift relative to wall clock.
-            time_until_next_step = m.opt.timestep - (time.time() - step_start)
-            if time_until_next_step > 0:
-                time.sleep(time_until_next_step)
-    listener.join()  # 等待监听器完成
+        except KeyboardInterrupt:
+            print("仿真中断，保存数据...")
+        finally:
+            # 确保仿真结束后保存数据
+            save_simulation_data()
+            keyboard_thread.join()
