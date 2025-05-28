@@ -68,13 +68,32 @@ def play(args):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
     env_cfg.env.num_envs = min(env_cfg.env.num_envs, 100)
+    env_cfg.terrain.mesh_type = 'plane'
     env_cfg.terrain.num_rows = 5
     env_cfg.terrain.num_cols = 5
     env_cfg.terrain.curriculum = False
     env_cfg.noise.add_noise = False
     env_cfg.domain_rand.randomize_friction = False
     env_cfg.domain_rand.push_robots = False
-
+    env_cfg.domain_rand.continuous_push = False 
+    env_cfg.domain_rand.randomize_base_mass = False 
+    env_cfg.domain_rand.randomize_base_com = False 
+    env_cfg.domain_rand.randomize_pd_gains = False 
+    env_cfg.domain_rand.randomize_calculated_torque = False 
+    env_cfg.domain_rand.randomize_link_mass = False 
+    env_cfg.domain_rand.randomize_motor_zero_offset = False 
+    env_cfg.domain_rand.randomize_joint_friction = False
+    env_cfg.domain_rand.randomize_joint_damping = False
+    env_cfg.domain_rand.randomize_joint_armature = False
+    env_cfg.domain_rand.randomize_cmd_action_latency = False
+    env_cfg.domain_rand.range_cmd_action_latency = [5, 5]
+    env_cfg.domain_rand.add_obs_latency = False
+    env_cfg.domain_rand.randomize_obs_motor_latency = False
+    env_cfg.domain_rand.range_obs_motor_latency = [5, 5]
+    env_cfg.domain_rand.randomize_obs_imu_latency = False
+    env_cfg.domain_rand.range_obs_imu_latency = [5, 5]
+    env_cfg.noise.curriculum = False
+    env_cfg.commands.heading_command = False
     env_cfg.env.test = True
 
     # prepare environment

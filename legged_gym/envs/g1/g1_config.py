@@ -24,15 +24,77 @@ class G1RoughCfg( LeggedRobotCfg ):
         num_privileged_obs = 48 # 多了机身线速度
         num_actions = 12
 
+    # class terrain(LeggedRobotCfg.terrain):
+    #     # mesh_type = 'plane'
+    #     mesh_type = 'trimesh'
+    #     curriculum = False
+    #     # rough terrain only:
+    #     measure_heights = False
+    #     static_friction = 0.6
+    #     dynamic_friction = 0.6
+    #     terrain_length = 8.
+    #     terrain_width = 8.
+    #     num_rows = 20  # number of terrain rows (levels)
+    #     num_cols = 20  # number of terrain cols (types)
+    #     max_init_terrain_level = 10  # starting curriculum state
+    #     # plane; obstacles; uniform; slope_up; slope_down, stair_up, stair_down
+    #     # terrain_proportions = [0.2, 0.2, 0.4, 0.1, 0.1, 0, 0]
+    #     terrain_proportions = [0, 0, 0, 0, 0, 0.5, 0.5]
+    #     # 反弹
+    #     restitution = 0.0
 
     class domain_rand(LeggedRobotCfg.domain_rand):
+        # 摩擦
         randomize_friction = True
         friction_range = [0.1, 1.25]
-        randomize_base_mass = True
-        added_mass_range = [-1., 3.]
+
+        # 推力扰动
         push_robots = True
         push_interval_s = 5
         max_push_vel_xy = 1.5
+        max_push_ang_vel = 0.6
+
+        # 质量和质心
+        randomize_base_mass = True
+        added_base_mass_range = [-1.0, 3.0]
+        randomize_base_com = True
+        added_base_com_range = [-0.06, 0.06]
+
+        # Link质量变化
+        randomize_link_mass = True
+        multiplied_link_mass_range = [0.8, 1.2]
+
+        # PD参数
+        randomize_pd_gains = True
+        stiffness_multiplier_range = [0.8, 1.2]  
+        damping_multiplier_range = [0.8, 1.2]    
+
+        # 扭矩
+        randomize_calculated_torque = True
+        torque_multiplier_range = [0.8, 1.2]
+
+        # 电机零点偏移
+        randomize_motor_zero_offset = True
+        motor_zero_offset_range = [-0.035, 0.035] # Offset to add to the motor angles
+
+        # 关节摩擦、阻尼、转动惯量
+        randomize_joint_friction = True
+        joint_friction_range = [0.01, 1.15]
+        randomize_joint_damping = True
+        joint_damping_range = [0.3, 1.5]
+        randomize_joint_armature = True
+        joint_armature_range = [0.008, 0.06]    
+
+        # 动作和观测延迟
+        add_cmd_action_latency = True
+        randomize_cmd_action_latency = True
+        range_cmd_action_latency = [2, 8]
+        add_obs_latency = True # no latency for obs_action
+        randomize_obs_motor_latency = True
+        randomize_obs_imu_latency = True
+        range_obs_motor_latency = [2,8]
+        range_obs_imu_latency = [2, 8]
+
       
 
     class control( LeggedRobotCfg.control ):
@@ -76,10 +138,10 @@ class G1RoughCfg( LeggedRobotCfg ):
             ang_vel_xy = -0.05
             orientation = -1.0
             base_height = -10.0
-            dof_acc = -2.5e-7
-            dof_vel = -1e-3
-            collision = 0.0
-            action_rate = -0.01
+            dof_acc = -5e-9 #-2.5e-7
+            dof_vel = -1e-5 #-1e-3
+            collision = -1
+            # action_rate = -0.01
             dof_pos_limits = -5.0
             alive = 0.15
             hip_pos = -1.0
@@ -87,21 +149,22 @@ class G1RoughCfg( LeggedRobotCfg ):
             feet_air_time = 1  #1
             contact = 0.18
             stand_still = -1.0
-            torques = -0.00001
+            torques = -1e-10 #-0.00001
+            action_smoothness = -0.003
+
 class G1RoughCfgPPO( LeggedRobotCfgPPO ):
     class policy:
-        init_noise_std = 0.8
-        actor_hidden_dims = [32]
-        critic_hidden_dims = [32]
-        activation = 'elu' # can be elu, relu, selu, crelu, lrelu, tanh, sigmoid
-        # only for 'ActorCriticRecurrent':
-        rnn_type = 'lstm'
-        rnn_hidden_size = 64
-        rnn_num_layers = 1
+        init_noise_std = 1.0
+        actor_hidden_dims = [512, 256, 128]
+        critic_hidden_dims = [512, 256, 128]
+        # activation = 'elu' # can be elu, relu, selu, crelu, lrelu, tanh, sigmoid
+        # # only for 'ActorCriticRecurrent':
+        # rnn_type = 'lstm'
+        # rnn_hidden_size = 64
+        # rnn_num_layers = 1
         
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
-        learning_rate = 5.e-5
     class runner( LeggedRobotCfgPPO.runner ):
         policy_class_name = "ActorCriticRecurrent"
         max_iterations = 3000

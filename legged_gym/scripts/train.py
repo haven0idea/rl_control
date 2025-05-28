@@ -17,5 +17,5 @@ if __name__ == '__main__':
     args = get_args()
     args.task = 'g1'
     args.num_envs = 4096
-    args.run_name = '0509_3'
+    args.run_name = '削弱课程——综合域随机化'
     train(args)

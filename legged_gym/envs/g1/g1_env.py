@@ -1,5 +1,6 @@
 
 from legged_gym.envs.base.legged_robot import LeggedRobot
+from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg
 
 from isaacgym.torch_utils import *
 from legged_gym.utils.math import wrap_to_pi
@@ -7,6 +8,11 @@ from isaacgym import gymtorch, gymapi, gymutil
 import torch
 
 class G1Robot(LeggedRobot):
+
+    def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless):
+        super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
+        self.reset_idx(torch.tensor(range(self.num_envs), device=self.device))
+        self.compute_observations()
     
     def _get_noise_scale_vec(self, cfg):
         """ Sets a vector used to scale the noise added to the observations.
@@ -92,6 +98,29 @@ class G1Robot(LeggedRobot):
                                     ),dim=-1)
         # add perceptive inputs if not blind
         # add noise if needed
+        q = (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos
+        dq = self.dof_vel * self.obs_scales.dof_vel
+
+        if self.cfg.domain_rand.add_obs_latency:
+            if self.cfg.domain_rand.randomize_obs_motor_latency:
+                self.obs_motor = self.obs_motor_latency_buffer[torch.arange(self.num_envs), :, self.obs_motor_latency_simstep.long()]
+            else:
+                self.obs_motor = torch.cat((q, dq), 1)
+
+            if self.cfg.domain_rand.randomize_obs_imu_latency:
+                self.obs_imu = self.obs_imu_latency_buffer[torch.arange(self.num_envs), :, self.obs_imu_latency_simstep.long()]
+            else:              
+                self.obs_imu = torch.cat((self.base_ang_vel  * self.obs_scales.ang_vel, self.projected_gravity), 1)
+
+            self.obs_buf = torch.cat((
+                self.obs_imu,
+                self.commands[:, :3] * self.commands_scale,  
+                self.obs_motor,
+                self.actions,   
+            ), dim=-1)
+
+            self.privileged_obs_buf = torch.cat((self.base_lin_vel * self.obs_scales.lin_vel, self.obs_buf), dim=-1)
+
         if self.add_noise:
             self.obs_buf += (2 * torch.rand_like(self.obs_buf) - 1) * self.noise_scale_vec
 
@@ -177,4 +206,16 @@ class G1Robot(LeggedRobot):
     
     def _reward_hip_pos(self):
         return torch.sum(torch.square(self.dof_pos[:,[1,2,7,8]]), dim=1)
+    
+    def _reward_action_smoothness(self):
+        """
+        Encourages smoothness in the robot's actions by penalizing large differences between consecutive actions.
+        This is important for achieving fluid motion and reducing mechanical stress.
+        """
+        term_1 = torch.sum(torch.square(
+            self.last_actions - self.actions), dim=1)
+        term_2 = torch.sum(torch.square(
+            self.actions + self.last_last_actions - 2 * self.last_actions), dim=1)
+        term_3 = 0.05 * torch.sum(torch.abs(self.actions), dim=1)
+        return term_1 + term_2 + term_3
     

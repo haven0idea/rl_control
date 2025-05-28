@@ -89,14 +89,57 @@ class LeggedRobotCfg(BaseConfig):
         armature = 0.
         thickness = 0.01
 
-    class domain_rand:
-        randomize_friction = True
+    class domain_rand:   
+        # 摩擦和反弹
+        randomize_friction = False
         friction_range = [0.5, 1.25]
+
+        # 推力扰动
+        push_robots = False
+        push_interval_s = 8
+        max_push_vel_xy = 0.4
+        max_push_ang_vel = 0.6
+
+        # 质量和质心
         randomize_base_mass = False
-        added_mass_range = [-1., 1.]
-        push_robots = True
-        push_interval_s = 15
-        max_push_vel_xy = 1.
+        added_base_mass_range = [-4.0, 4.0]
+        randomize_base_com = False
+        added_base_com_range = [-0.06, 0.06]
+
+        # Link质量变化
+        randomize_link_mass = False
+        multiplied_link_mass_range = [0.8, 1.2]
+        
+        # PD参数
+        randomize_pd_gains = False
+        stiffness_multiplier_range = [0.8, 1.2]  
+        damping_multiplier_range = [0.8, 1.2]    
+
+        # 扭矩
+        randomize_calculated_torque = False
+        torque_multiplier_range = [0.8, 1.2]
+
+        # 电机零点偏移
+        randomize_motor_zero_offset = False
+        motor_zero_offset_range = [-0.035, 0.035] 
+
+        # 关节摩擦、阻尼、转动惯量
+        randomize_joint_friction = False
+        joint_friction_range = [0.01, 1.15]
+        randomize_joint_damping = False
+        joint_damping_range = [0.3, 1.5]
+        randomize_joint_armature = False
+        joint_armature_range = [0.008, 0.06]    
+
+        # 动作和观测延迟
+        add_cmd_action_latency = False
+        randomize_cmd_action_latency = False
+        range_cmd_action_latency = [1, 10]
+        add_obs_latency = False # no latency for obs_action
+        randomize_obs_motor_latency = False
+        randomize_obs_imu_latency = False
+        range_obs_motor_latency = [1, 10]
+        range_obs_imu_latency = [1, 10]
 
     class rewards:
         class scales:
@@ -177,7 +220,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         init_noise_std = 1.0
         actor_hidden_dims = [512, 256, 128]
         critic_hidden_dims = [512, 256, 128]
-        activation = 'elu' # can be elu, relu, selu, crelu, lrelu, tanh, sigmoid
+        # activation = 'elu' # can be elu, relu, selu, crelu, lrelu, tanh, sigmoid
         # only for 'ActorCriticRecurrent':
         # rnn_type = 'lstm'
         # rnn_hidden_size = 512
@@ -187,6 +230,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         # training params
         value_loss_coef = 1.0
         use_clipped_value_loss = True
+        # 裁剪幅度
         clip_param = 0.2
         entropy_coef = 0.01
         num_learning_epochs = 5
