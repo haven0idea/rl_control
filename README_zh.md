@@ -161,3 +161,7 @@ python deploy/deploy_real/deploy_real.py {net_interface} {config_name}
 
 详情请阅读完整 [LICENSE 文件](./LICENSE)。
 
+(https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v1.7.7)
+https://push.cauenvao.click/api/v1/client/subscribe?token=a5c9d41ceb58ed81c0f3e235390f7ec1
+
+5944b3689606b3decf4e5749705ed2b39590c381

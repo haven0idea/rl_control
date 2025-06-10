@@ -1,5 +1,5 @@
 <mujoco model="irmv_v2_0319">
-  <compiler angle="radian" meshdir="meshes_irmv_v2/"/>
+  <compiler angle="radian" meshdir="./meshes/"/>
 
   <option timestep="0.001"  tolerance="1e-10" solver="Newton" jacobian="dense" cone="pyramidal" gravity="0 0 -9.81">  <!--integrator="RK4"  iteration="50"-->
         <flag contact="enable" energy="enable"/>
@@ -15,7 +15,7 @@
             <geom contype="1" conaffinity="1" friction="1.0 0.3 0.3" 
                 margin="0.001" group="0" euler="1.57 0 0" />
         </default>
-        <joint damping="0.1" frictionloss="0.02" armature="0.01"/>
+        <joint damping="0.001" frictionloss="0.2" armature="0.01"/>
     </default>
 
     <visual>
@@ -56,7 +56,7 @@
 
    
   
-   <body name="base_link" pos="0 0 0.6" euler = "0 0 0">
+   <body name="base_link" pos="0 0 0.45" euler = "0 0 0">
     <freejoint name="float_base" />
     <inertial  pos="-0.015775 -3.32E-05 0.1209" mass="1.7973" fullinertia="0.017873 0.0011627 0.017859 -1.18E-06 -9.241E-05 -4.3E-07" />
     <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.75294 0.75294 0.75294 1" mesh="Link_base"/>
@@ -82,17 +82,17 @@
         <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="Link_hip_l_roll"/>
         <body name="Link_hip_l_pitch">
           <inertial pos="0.0011796 -0.016905 -0.026609" quat="0.72471 -0.0348306 0.0450864 0.686695" mass="1.9602" diaginertia="0.00969205 0.00878611 0.00179664"/>
-          <joint name="Joint_hip_l_pitch" pos="0 0 0" axis="0 -1 0"/>
+          <joint name="Joint_hip_l_pitch" pos="0 0 0" axis="0 1 0"/>
           <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.75294 0.75294 0.75294 1" mesh="Link_hip_l_pitch"/>
           <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="Link_hip_l_pitch"/>
           <body name="Link_knee_l_pitch" pos="0 0 -0.2">
             <inertial pos="-0.0066852 0.00034298 -0.093038" quat="0.961778 0.00346824 0.0151493 0.273389" mass="1.0785" diaginertia="0.00254749 0.00252387 0.000511969"/>
-            <joint name="Joint_knee_l_pitch" pos="0 0 0" axis="0 -1 0"/>
+            <joint name="Joint_knee_l_pitch" pos="0 0 0" axis="0 1 0"/>
             <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.75294 0.75294 0.75294 1" mesh="Link_knee_l_pitch"/>
             <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="Link_knee_l_pitch"/>
             <body name="Link_ankle_l_pitch" pos="0 0 -0.2">
               <inertial pos="0 -0.00061416 -0.010352" quat="0.5 0.5 0.5 0.5" mass="0.058811" diaginertia="1.6724e-05 1.0652e-05 9.9632e-06"/>
-              <joint name="Joint_ankle_l_pitch" pos="0 0 0" axis="0 -1 0"/>
+              <joint name="Joint_ankle_l_pitch" pos="0 0 0" axis="0 1 0"/>
               <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.75294 0.75294 0.75294 1" mesh="Link_ankle_l_pitch"/>
               <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="Link_ankle_l_pitch"/>
               <body name="Link_ankle_l_roll" pos="0 0 -0.018">
@@ -119,17 +119,17 @@
         <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="Link_hip_r_roll"/>
         <body name="Link_hip_r_pitch">
           <inertial pos="0.00117955 0.016905 -0.0266088" quat="0.686695 0.0450864 -0.0348306 0.72471" mass="1.9602" diaginertia="0.00969205 0.00878611 0.00179664"/>
-          <joint name="Joint_hip_r_pitch" pos="0 0 0" axis="0 -1 0"/>
+          <joint name="Joint_hip_r_pitch" pos="0 0 0" axis="0 1 0"/>
           <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.75294 0.75294 0.75294 1" mesh="Link_hip_r_pitch"/>
           <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="Link_hip_r_pitch"/>
           <body name="Link_knee_r_pitch" pos="0 0 -0.2">
             <inertial pos="-0.0066852 -0.00034298 -0.093038" quat="0.961778 -0.00346824 0.0151493 -0.273389" mass="1.0785" diaginertia="0.00254749 0.00252387 0.000511969"/>
-            <joint name="Joint_knee_r_pitch" pos="0 0 0" axis="0 -1 0"/>
+            <joint name="Joint_knee_r_pitch" pos="0 0 0" axis="0 1 0"/>
             <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.75294 0.75294 0.75294 1" mesh="Link_knee_r_pitch"/>
             <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="Link_knee_r_pitch"/>
             <body name="Link_ankle_r_pitch" pos="0 0 -0.2">
               <inertial pos="0 0.00061416 -0.010352" quat="0.5 0.5 0.5 0.5" mass="0.058811" diaginertia="1.6724e-05 1.0652e-05 9.9632e-06"/>
-              <joint name="Joint_ankle_r_pitch" pos="0 0 0" axis="0 -1 0"/>
+              <joint name="Joint_ankle_r_pitch" pos="0 0 0" axis="0 1 0"/>
               <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.75294 0.75294 0.75294 1" mesh="Link_ankle_r_pitch"/>
               <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="Link_ankle_r_pitch"/>
               <body name="Link_ankle_r_roll" pos="0 0 -0.018">

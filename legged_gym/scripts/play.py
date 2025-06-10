@@ -85,6 +85,7 @@ def play(args):
     env_cfg.domain_rand.randomize_joint_friction = False
     env_cfg.domain_rand.randomize_joint_damping = False
     env_cfg.domain_rand.randomize_joint_armature = False
+    env_cfg.domain_rand.add_cmd_action_latency = False
     env_cfg.domain_rand.randomize_cmd_action_latency = False
     env_cfg.domain_rand.range_cmd_action_latency = [5, 5]
     env_cfg.domain_rand.add_obs_latency = False
@@ -127,9 +128,10 @@ if __name__ == '__main__':
     MOVE_CAMERA = False
     args = get_args()
     args.num_envs = 10
-    args.task = "g1"
-    args.load_run = "/home/why/unitree_rl_gym/logs/g1"
-
+    args.task = "irmv2"
+    args.load_run = "/home/why/unitree_rl_gym/logs/irmv2"
+    # args.task = "g1"
+    # args.load_run = "/home/why/unitree_rl_gym/logs/g1"
     # 启动键盘监听
     listener = Listener(on_press=on_press, on_release=on_release)
     listener.start()  # 启动监听器

@@ -4,12 +4,12 @@
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
   name="irmv_v2_0319">
-  <mujoco>
+  <!-- <mujoco>
         <compiler 
-        meshdir="../meshes/" 
+        meshdir="./meshes/" 
         balanceinertia="true" 
         discardvisual="false" />
-  </mujoco>
+  </mujoco> -->
 
 
   <link
@@ -34,7 +34,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_base.STL" />
+          filename="./meshes/Link_base.STL" />
       </geometry>
       <material
         name="">
@@ -48,7 +48,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_base.STL" />
+          filename="./meshes/Link_base.STL" />
       </geometry>
     </collision>
   </link>
@@ -75,7 +75,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_body.STL" />
+          filename="./meshes/Link_body.STL" />
       </geometry>
       <material
         name="">
@@ -89,7 +89,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_body.STL" />
+          filename="./meshes/Link_body.STL" />
       </geometry>
     </collision>
   </link>
@@ -130,7 +130,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_l_yaw.STL" />
+          filename="./meshes/Link_hip_l_yaw.STL" />
       </geometry>
       <material
         name="">
@@ -144,7 +144,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_l_yaw.STL" />
+          filename="./meshes/Link_hip_l_yaw.STL" />
       </geometry>
     </collision>
   </link>
@@ -163,8 +163,8 @@
     <limit
       lower="-1.5708"
       upper="1.5708"
-      effort="0"
-      velocity="0" />
+      effort="35"
+      velocity="3" />
   </joint>
   <link
     name="Link_hip_l_roll">
@@ -188,7 +188,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_l_roll.STL" />
+          filename="./meshes/Link_hip_l_roll.STL" />
       </geometry>
       <material
         name="">
@@ -202,7 +202,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_l_roll.STL" />
+          filename="./meshes/Link_hip_l_roll.STL" />
       </geometry>
     </collision>
   </link>
@@ -221,8 +221,8 @@
     <limit
       lower="-1.5708"
       upper="1.5708"
-      effort="0"
-      velocity="0" />
+      effort="35"
+      velocity="3" />
   </joint>
   <link
     name="Link_hip_l_pitch">
@@ -246,7 +246,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_l_pitch.STL" />
+          filename="./meshes/Link_hip_l_pitch.STL" />
       </geometry>
       <material
         name="">
@@ -260,7 +260,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_l_pitch.STL" />
+          filename="./meshes/Link_hip_l_pitch.STL" />
       </geometry>
     </collision>
   </link>
@@ -275,12 +275,12 @@
     <child
       link="Link_hip_l_pitch" />
     <axis
-      xyz="0 -1 0" />
+      xyz="0 1 0" />
     <limit
-      lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
+      lower="-2.2689"
+      upper="0.9948"
+      effort="40"
+      velocity="12" />
   </joint>
   <link
     name="Link_knee_l_pitch">
@@ -304,7 +304,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_knee_l_pitch.STL" />
+          filename="./meshes/Link_knee_l_pitch.STL" />
       </geometry>
       <material
         name="">
@@ -313,12 +313,9 @@
       </material>
     </visual>
     <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
+      <origin xyz="0.007 -0.005 -0.15" rpy="0 0 0"/>
       <geometry>
-        <mesh
-          filename="package://irmv_v2_0319/meshes/Link_knee_l_pitch.STL" />
+        <cylinder radius="0.03" length="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -333,12 +330,12 @@
     <child
       link="Link_knee_l_pitch" />
     <axis
-      xyz="0 -1 0" />
+      xyz="0 1 0" />
     <limit
       lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
+      upper="2.0944"
+      effort="40"
+      velocity="12" />
   </joint>
   <link
     name="Link_ankle_l_pitch">
@@ -362,7 +359,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_ankle_l_pitch.STL" />
+          filename="./meshes/Link_ankle_l_pitch.STL" />
       </geometry>
       <material
         name="">
@@ -376,7 +373,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_ankle_l_pitch.STL" />
+          filename="./meshes/Link_ankle_l_pitch.STL" />
       </geometry>
     </collision>
   </link>
@@ -391,12 +388,12 @@
     <child
       link="Link_ankle_l_pitch" />
     <axis
-      xyz="0 -1 0" />
+      xyz="0 1 0" />
     <limit
-      lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
+      lower="-0.7854"
+      upper="0.8727"
+      effort="30"
+      velocity="6" />
   </joint>
   <link
     name="Link_ankle_l_roll">
@@ -405,7 +402,7 @@
         xyz="0.021459 0 -0.01976"
         rpy="0 0 0" />
       <mass
-        value="0.22291" />
+        value="0.32291" />
       <inertia
         ixx="6.837E-05"
         ixy="-1.6692E-05"
@@ -420,7 +417,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_ankle_l_roll.STL" />
+          filename="./meshes/Link_ankle_l_roll.STL" />
       </geometry>
       <material
         name="">
@@ -434,7 +431,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_ankle_l_roll.STL" />
+          filename="./meshes/Link_ankle_l_roll.STL" />
       </geometry>
     </collision>
   </link>
@@ -473,7 +470,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_r_yaw.STL" />
+          filename="./meshes/Link_hip_r_yaw.STL" />
       </geometry>
       <material
         name="">
@@ -487,7 +484,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_r_yaw.STL" />
+          filename="./meshes/Link_hip_r_yaw.STL" />
       </geometry>
     </collision>
   </link>
@@ -506,8 +503,8 @@
     <limit
       lower="-1.5708"
       upper="1.5708"
-      effort="0"
-      velocity="0" />
+      effort="35"
+      velocity="3" />
   </joint>
   <link
     name="Link_hip_r_roll">
@@ -531,7 +528,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_r_roll.STL" />
+          filename="./meshes/Link_hip_r_roll.STL" />
       </geometry>
       <material
         name="">
@@ -545,7 +542,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_r_roll.STL" />
+          filename="./meshes/Link_hip_r_roll.STL" />
       </geometry>
     </collision>
   </link>
@@ -564,8 +561,8 @@
     <limit
       lower="-1.5708"
       upper="1.5708"
-      effort="0"
-      velocity="0" />
+      effort="35"
+      velocity="3" />
   </joint>
   <link
     name="Link_hip_r_pitch">
@@ -589,7 +586,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_r_pitch.STL" />
+          filename="./meshes/Link_hip_r_pitch.STL" />
       </geometry>
       <material
         name="">
@@ -603,7 +600,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_hip_r_pitch.STL" />
+          filename="./meshes/Link_hip_r_pitch.STL" />
       </geometry>
     </collision>
   </link>
@@ -618,12 +615,12 @@
     <child
       link="Link_hip_r_pitch" />
     <axis
-      xyz="0 -1 0" />
+      xyz="0 1 0" />
     <limit
-      lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
+      lower="-2.2689"
+      upper="0.9948"
+      effort="40"
+      velocity="12" />
   </joint>
   <link
     name="Link_knee_r_pitch">
@@ -647,7 +644,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_knee_r_pitch.STL" />
+          filename="./meshes/Link_knee_r_pitch.STL" />
       </geometry>
       <material
         name="">
@@ -656,12 +653,9 @@
       </material>
     </visual>
     <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
+      <origin xyz="0.007 -0.005 -0.15" rpy="0 0 0"/>
       <geometry>
-        <mesh
-          filename="package://irmv_v2_0319/meshes/Link_knee_r_pitch.STL" />
+        <cylinder radius="0.03" length="0.02"/>
       </geometry>
     </collision>
   </link>
@@ -676,12 +670,12 @@
     <child
       link="Link_knee_r_pitch" />
     <axis
-      xyz="0 -1 0" />
+      xyz="0 1 0" />
     <limit
       lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
+      upper="2.0944"
+      effort="40"
+      velocity="12" />
   </joint>
   <link
     name="Link_ankle_r_pitch">
@@ -705,7 +699,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_ankle_r_pitch.STL" />
+          filename="./meshes/Link_ankle_r_pitch.STL" />
       </geometry>
       <material
         name="">
@@ -719,7 +713,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_ankle_r_pitch.STL" />
+          filename="./meshes/Link_ankle_r_pitch.STL" />
       </geometry>
     </collision>
   </link>
@@ -734,12 +728,12 @@
     <child
       link="Link_ankle_r_pitch" />
     <axis
-      xyz="0 -1 0" />
+      xyz="0 1 0" />
     <limit
-      lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
+      lower="-0.7854"
+      upper="0.8727"
+      effort="30"
+      velocity="6" />
   </joint>
   <link
     name="Link_ankle_r_roll">
@@ -748,7 +742,7 @@
         xyz="0.0214588 0 -0.01975951"
         rpy="0 0 0" />
       <mass
-        value="0.22291" />
+        value="0.32291" />
       <inertia
         ixx="6.837E-05"
         ixy="1.6693E-05"
@@ -763,7 +757,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_ankle_r_roll.STL" />
+          filename="./meshes/Link_ankle_r_roll.STL" />
       </geometry>
       <material
         name="">
@@ -777,7 +771,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://irmv_v2_0319/meshes/Link_ankle_r_roll.STL" />
+          filename="./meshes/Link_ankle_r_roll.STL" />
       </geometry>
     </collision>
   </link>

@@ -71,6 +71,7 @@ class LeggedRobotCfg(BaseConfig):
         file = ""
         name = "legged_robot"  # actor name
         foot_name = "None" # name of the feet bodies, used to index body state and contact force tensors
+        knee_name = "None"
         penalize_contacts_on = []
         terminate_after_contacts_on = []
         disable_gravity = False
@@ -134,12 +135,12 @@ class LeggedRobotCfg(BaseConfig):
         # 动作和观测延迟
         add_cmd_action_latency = False
         randomize_cmd_action_latency = False
-        range_cmd_action_latency = [1, 10]
+        range_cmd_action_latency = [2, 10]
         add_obs_latency = False # no latency for obs_action
         randomize_obs_motor_latency = False
         randomize_obs_imu_latency = False
-        range_obs_motor_latency = [1, 10]
-        range_obs_imu_latency = [1, 10]
+        range_obs_motor_latency = [2, 10]
+        range_obs_imu_latency = [2, 10]
 
     class rewards:
         class scales:
@@ -156,7 +157,7 @@ class LeggedRobotCfg(BaseConfig):
             feet_air_time =  1.0
             collision = -1.
             feet_stumble = -0.0 
-            action_rate = -0.01
+            action_rate = -0.
             stand_still = -0.
 
         only_positive_rewards = True # if true negative total rewards are clipped at zero (avoids early termination problems)
@@ -249,7 +250,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         max_iterations = 1500 # number of policy updates
 
         # logging
-        save_interval = 50 # check for potential saves every this many iterations
+        save_interval = 200 # check for potential saves every this many iterations
         experiment_name = 'test'
         run_name = ''
         # load and resume

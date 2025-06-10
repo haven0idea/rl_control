@@ -82,6 +82,15 @@ class LeggedRobot(BaseTask):
             self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
 
+        # # debug
+        # self.gym.refresh_actor_root_state_tensor(self.sim)
+        # self.root_states = gymtorch.wrap_tensor(self.gym.get_actor_root_state_tensor(self.sim))
+
+        # if torch.isnan(self.root_states).any():
+        #     print("[NaN DETECTED] after stepping sim!")
+        # if torch.isnan(actions).any() or torch.isinf(actions).any():
+        #     print("[ERROR] Invalid action:", actions)
+
     def update_cmd_action_latency_buffer(self):
         if self.cfg.domain_rand.add_cmd_action_latency:
             self.cmd_action_latency_buffer[:,:,1:] = self.cmd_action_latency_buffer[:,:,:self.cfg.domain_rand.range_cmd_action_latency[1]].clone()
@@ -123,7 +132,6 @@ class LeggedRobot(BaseTask):
         self.base_lin_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
         self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
-
         self._post_physics_step_callback()
 
         # compute observations, rewards, resets, ...
@@ -194,7 +202,7 @@ class LeggedRobot(BaseTask):
         # send timeout info to the algorithm
         if self.cfg.env.send_timeouts:
             self.extras["time_outs"] = self.time_out_buf
-    
+
     def compute_reward(self):
         """ Compute rewards
             Calls each reward function which had a non-zero scale (processed in self._prepare_reward_function())
@@ -322,11 +330,22 @@ class LeggedRobot(BaseTask):
         # randomization of the motor armature in issac gym
         if self.cfg.domain_rand.randomize_joint_armature:
             self.joint_armatures[env_id, 0] = torch_rand_float(self.cfg.domain_rand.joint_armature_range[0], self.cfg.domain_rand.joint_armature_range[1], (1, 1), device=self.device)
+        
+        # 设置irmv2的关节默认参数
+        for i in range(len(props)):
+             props["friction"][i] = 0.2
+             props["damping"][i] = 0.001
+             props["armature"][i] = 0.01
+        
         # 设置gym中的关节运动参数
         for i in range(len(props)):
              props["friction"][i] *= self.joint_friction_coeffs[env_id, 0]
              props["damping"][i] *= self.joint_damping_coeffs[env_id, 0]
-             props["armature"][i] = self.joint_armatures[env_id, 0]
+             props["armature"][i] += self.joint_armatures[env_id, 0]
+
+        # print("Default friction:", props["friction"])  # 查看默认摩擦
+        # print("Default damping:", props["damping"])   # 查看默认阻尼
+        # print("Default armature:", props["armature"]) # 查看默认惯性
 
         return props
 
@@ -401,6 +420,8 @@ class LeggedRobot(BaseTask):
         p_gains = self.p_gains * self.p_gains_multiplier
         d_gains = self.d_gains * self.d_gains_multiplier
         actions_scaled = actions * self.cfg.control.action_scale
+        self.action_target=actions_scaled.clone() + self.default_dof_pos
+
         control_type = self.cfg.control.control_type
         if control_type=="P":
             torques = p_gains*(actions_scaled + self.default_dof_pos - self.dof_pos + self.motor_zero_offsets) - d_gains*self.dof_vel
@@ -455,8 +476,8 @@ class LeggedRobot(BaseTask):
         max_learning_iterations = 5000
         scale = min(iteration / max_learning_iterations, 1.0)
 
-        if iteration % 100 == 0:
-             print(f"[DEBUG] Iteration: {iteration}, Latency Scale: {scale:.2f}")
+        # if iteration % 100 == 0:
+        #      print(f"[DEBUG] Iteration: {iteration}, Latency Scale: {scale:.2f}")
 
         def get_scaled_range(min_val, max_val):
             scaled_min = int(min_val)
@@ -554,6 +575,11 @@ class LeggedRobot(BaseTask):
 
         # create some wrapper tensors for different slices
         self.root_states = gymtorch.wrap_tensor(actor_root_state)
+        # debug
+        if torch.isnan(self.root_states).any():
+            print("[NaN DETECTED] right after reset!")
+            import pdb; pdb.set_trace()
+
         self.dof_state = gymtorch.wrap_tensor(dof_state_tensor)
         self.dof_pos = self.dof_state.view(self.num_envs, self.num_dof, 2)[..., 0]
         self.dof_vel = self.dof_state.view(self.num_envs, self.num_dof, 2)[..., 1]
@@ -610,6 +636,7 @@ class LeggedRobot(BaseTask):
                 if self.cfg.control.control_type in ["P", "V"]:
                     print(f"PD gain of joint {name} were not defined, setting them to zero")
         self.default_dof_pos = self.default_dof_pos.unsqueeze(0)
+        self.action_target=self.default_dof_pos.clone()
 
     def _prepare_reward_function(self):
         """ Prepares a list of reward functions, whcih will be called to compute the total reward.
@@ -687,6 +714,8 @@ class LeggedRobot(BaseTask):
         self.num_bodies = len(body_names)
         self.num_dofs = len(self.dof_names)
         feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
+        knee_names = [s for s in body_names if self.cfg.asset.knee_name in s]
+
         penalized_contact_names = []
         for name in self.cfg.asset.penalize_contacts_on:
             penalized_contact_names.extend([s for s in body_names if name in s])
@@ -696,6 +725,7 @@ class LeggedRobot(BaseTask):
 
         print("Body names:", body_names)
         print("Feet names:", feet_names)
+        print("Knee names:", knee_names)
         print("penalized_contact_names:", penalized_contact_names)
 
         base_init_state_list = self.cfg.init_state.pos + self.cfg.init_state.rot + self.cfg.init_state.lin_vel + self.cfg.init_state.ang_vel
@@ -750,6 +780,11 @@ class LeggedRobot(BaseTask):
         for i in range(len(feet_names)):
             self.feet_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], feet_names[i])
 
+        self.knee_indices = torch.zeros(len(knee_names), dtype=torch.long, device=self.device, requires_grad=False)
+        for i in range(len(knee_names)):
+            self.knee_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0],
+                                                                         knee_names[i])
+            
         self.penalised_contact_indices = torch.zeros(len(penalized_contact_names), dtype=torch.long, device=self.device, requires_grad=False)
         for i in range(len(penalized_contact_names)):
             self.penalised_contact_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], penalized_contact_names[i])
@@ -803,7 +838,8 @@ class LeggedRobot(BaseTask):
     def _reward_base_height(self):
         # Penalize base height away from target
         base_height = self.root_states[:, 2]
-        return torch.square(base_height - self.cfg.rewards.base_height_target)
+        # return torch.square(base_height - self.cfg.rewards.base_height_target)
+        return torch.exp(-torch.abs(base_height - self.cfg.rewards.base_height_target) * 100)
     
     def _reward_torques(self):
         # Penalize torques

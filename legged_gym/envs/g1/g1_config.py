@@ -20,8 +20,15 @@ class G1RoughCfg( LeggedRobotCfg ):
         }
     
     class env(LeggedRobotCfg.env):
-        num_observations = 45
-        num_privileged_obs = 48 # 多了机身线速度
+        frame_stack = 10
+        c_frame_stack = 3
+
+        # num_observations = 45
+        # num_privileged_obs = 48 # 多了机身线速度
+        single_num_observations = 45
+        num_observations = int(frame_stack * single_num_observations)
+        single_num_privileged_obs = 48
+        num_privileged_obs = int (c_frame_stack * single_num_privileged_obs)
         num_actions = 12
 
     # class terrain(LeggedRobotCfg.terrain):
@@ -88,12 +95,12 @@ class G1RoughCfg( LeggedRobotCfg ):
         # 动作和观测延迟
         add_cmd_action_latency = True
         randomize_cmd_action_latency = True
-        range_cmd_action_latency = [2, 8]
+        range_cmd_action_latency = [2, 10]
         add_obs_latency = True # no latency for obs_action
         randomize_obs_motor_latency = True
         randomize_obs_imu_latency = True
-        range_obs_motor_latency = [2,8]
-        range_obs_imu_latency = [2, 8]
+        range_obs_motor_latency = [2, 10]
+        range_obs_imu_latency = [2, 10]
 
       
 
@@ -122,6 +129,7 @@ class G1RoughCfg( LeggedRobotCfg ):
         file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/g1_description/g1_12dof.urdf'
         name = "g1"
         foot_name = "ankle_roll"
+        knee_name = "knee"
         penalize_contacts_on = ["hip", "knee"]
         terminate_after_contacts_on = ["pelvis"]
         self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
@@ -130,28 +138,37 @@ class G1RoughCfg( LeggedRobotCfg ):
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.78
-        
+        min_dist = 0.18
+        max_dist = 0.4
+        max_contact_force = 200. # forces above this value are penalized
         class scales( LeggedRobotCfg.rewards.scales ):
-            tracking_lin_vel = 1.0
-            tracking_ang_vel = 0.5
-            lin_vel_z = -2.0
-            ang_vel_xy = -0.05
+            tracking_lin_vel = 1.0  #1.0
+            tracking_ang_vel = 0.5  #0.5
+            lin_vel_z = -0.5 #-1
+            ang_vel_xy = -0.05 #-0.05
             orientation = -1.0
-            base_height = -10.0
-            dof_acc = -5e-9 #-2.5e-7
+            base_height = 0.2
+            dof_acc = -1e-7 #-2.5e-7
             dof_vel = -1e-5 #-1e-3
-            collision = -1
-            # action_rate = -0.01
+            collision = 0
             dof_pos_limits = -5.0
             alive = 0.15
-            hip_pos = -1.0
+            hip_pos = -0.5 #-1.0
             contact_no_vel = -0.2
-            feet_air_time = 1  #1
+            feet_air_time = 1  
             contact = 0.18
-            stand_still = -1.0
-            torques = -1e-10 #-0.00001
+            stand_still = -1.0 #-1.0
+            torques = -5e-6 #-0.00001
             action_smoothness = -0.003
 
+            foot_slip = -0.1
+            feet_swing_height = 0
+            joint_error = -0.01#-0.25
+            feet_distance = 0.2
+            knee_distance = 0.2
+            energy_square = -1e-4
+            track_vel_hard = 0.1 #0.5
+            
 class G1RoughCfgPPO( LeggedRobotCfgPPO ):
     class policy:
         init_noise_std = 1.0
@@ -164,12 +181,15 @@ class G1RoughCfgPPO( LeggedRobotCfgPPO ):
         # rnn_num_layers = 1
         
     class algorithm( LeggedRobotCfgPPO.algorithm ):
-        entropy_coef = 0.01
+        entropy_coef_start = 0.01
+        entropy_coef_end = 0.0005
+        entropy_coef_decay_iters = 5000
     class runner( LeggedRobotCfgPPO.runner ):
         policy_class_name = "ActorCriticRecurrent"
-        max_iterations = 3000
+        max_iterations = 5000
         run_name = ''
         experiment_name = 'g1'
+
 
 # 最大迭代次数假设5000,在其中每次环境运行24次循环，在每次循环中得到了action，进行step，在step中进行降采样，对齐50Hz的时间线，返回一次的观测、奖励等
 # 相当于每个环境用MC采样得到了24步数据，存到transition中，trade off 部分
