@@ -150,9 +150,11 @@ def get_args():
 def export_policy_as_jit(actor_critic, path):
     if hasattr(actor_critic, 'memory_a'):
         # assumes LSTM: TODO add GRU
+        print("导出带有LSTM的策略")
         exporter = PolicyExporterLSTM(actor_critic)
         exporter.export(path)
     else: 
+        print("导出MLP的策略")
         os.makedirs(path, exist_ok=True)
         path = os.path.join(path, 'policy_1.pt')
         model = copy.deepcopy(actor_critic.actor).to('cpu')

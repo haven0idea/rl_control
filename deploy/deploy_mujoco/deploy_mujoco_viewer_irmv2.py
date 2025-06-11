@@ -16,14 +16,16 @@ import threading
 import onnx
 import onnxruntime as ort
 import mujoco_viewer
-
+from collections import deque
 # ------------------------------------------------------
 # 用于存储机器人的命令
+command_lock = threading.Lock()
 env_commands = [0, 0, 0, 0]  
 
 # 更新命令
 def update_command():
-    print(f"当前机器人速度为: {env_commands[0]}, {env_commands[1]}, {env_commands[2]}, {env_commands[3]}")
+    with command_lock:
+        print(f"当前机器人速度为: {env_commands[0]}, {env_commands[1]}, {env_commands[2]}, {env_commands[3]}")
 
 # 键盘按键按下事件回调
 def on_press(key):
@@ -119,7 +121,7 @@ if __name__ == "__main__":
     config_file = args.config_file
     with open(f"{LEGGED_GYM_ROOT_DIR}/deploy/deploy_mujoco/configs/{config_file}", "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-        policy_path = config["policy_path"].replace("{LEGGED_GYM_ROOT_DIR}", LEGGED_GYM_ROOT_DIR)
+        policy_path = config["onnx_policy_path"].replace("{LEGGED_GYM_ROOT_DIR}", LEGGED_GYM_ROOT_DIR)
         xml_path = config["xml_path"].replace("{LEGGED_GYM_ROOT_DIR}", LEGGED_GYM_ROOT_DIR)
 
         simulation_duration = config["simulation_duration"]
@@ -143,6 +145,7 @@ if __name__ == "__main__":
         cmd = np.array(config["cmd_init"], dtype=np.float32)
 
         log_name = config["log_name"]
+        num_obs_frame = config["frame_stack"]
 
     # 启动键盘监听线程
     keyboard_thread = threading.Thread(target=listen_for_keyboard)
@@ -169,6 +172,10 @@ if __name__ == "__main__":
     onnx.checker.check_model(model)
     policy=ort.InferenceSession(policy_path)
 
+    hist_obs = deque()
+    for _ in range(num_obs_frame):
+        hist_obs.append(np.zeros([1, num_obs], dtype=np.float32))
+
     viewer = mujoco_viewer.MujocoViewer(m, d)
     # 创建及覆盖原文件
     with open(log_name, 'w', newline='') as csvfile:
@@ -179,9 +186,10 @@ if __name__ == "__main__":
     try:
         while time.time() - start < simulation_duration:
             simulation_time += simulation_dt
-            cmd[0] = env_commands[0]
-            cmd[1] = env_commands[1]
-            cmd[2] = env_commands[2]
+            with command_lock:
+                cmd[0] = env_commands[0]
+                cmd[1] = env_commands[1]
+                cmd[2] = env_commands[2]
 
             step_start = time.time()
             tau = pd_control(target_dof_pos, d.qpos[7:], kps, np.zeros_like(kds), d.qvel[6:], kds)
@@ -213,19 +221,28 @@ if __name__ == "__main__":
                 obs[:3] = omega #3
                 obs[3:6] = gravity_orientation #3
                 obs[6:9] = cmd * cmd_scale #3
-                obs[9 : 9 + num_actions] = qj #12
-                obs[9 + num_actions : 9 + 2 * num_actions] = dqj #12
-                obs[9 + 2 * num_actions : 9 + 3 * num_actions] = action #12
-                obs_tensor = torch.from_numpy(obs).unsqueeze(0)
+                obs[9 : 9 + num_actions] = qj #10
+                obs[9 + num_actions : 9 + 2 * num_actions] = dqj #10
+                obs[9 + 2 * num_actions : 9 + 3 * num_actions] = action #10
+
+                obs_copy = np.clip(obs, -18, 18)
+                hist_obs.append(obs_copy)
+                hist_obs.popleft()
+
+                policy_input = np.zeros([1,num_obs_frame*num_obs], dtype=np.float32)
+                for i in range(num_obs_frame):
+                    policy_input[0, i * num_obs : (i + 1) * num_obs] = hist_obs[i]
+
+                obs_tensor = torch.from_numpy(policy_input)
 
                 # policy inference
                 outputs = policy.run(None, {'input': obs_tensor.numpy()}) 
                 action = outputs[0]  # outputs 是一个包含所有输出的列表
                 action = action = action.squeeze()
-                action = np.clip(action, -20., 20.)
+                action = np.clip(action, -4., 4.)
                 # transform action to target_dof_pos
                 target_dof_pos = action * action_scale + default_angles
-                print ("target:", target_dof_pos)
+                # print ("target:", target_dof_pos)
                 # 将数据暂存到内存中
                 simulation_data.append([simulation_time,
                                         array_to_str(target_dof_pos), 

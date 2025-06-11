@@ -176,16 +176,17 @@ if __name__ == "__main__":
         # Close the viewer automatically after simulation_duration wall-seconds.
         start = time.time()
 
-        render_every_n_steps = 5
-        step_counter = 0
+        # render_every_n_steps = 5
+        # step_counter = 0
         try:
             # print("viewer.is_running()",viewer.is_running())
             while viewer.is_running() and time.time() - start < simulation_duration:
                 # print("start!!!!!!")
                 simulation_time += simulation_dt
-                cmd[0] = env_commands[0]
-                cmd[1] = env_commands[1]
-                cmd[2] = env_commands[2]
+                with command_lock:
+                    cmd[0] = env_commands[0]
+                    cmd[1] = env_commands[1]
+                    cmd[2] = env_commands[2]
 
                 step_start = time.time()
                 tau = pd_control(target_dof_pos, d.qpos[7:], kps, np.zeros_like(kds), d.qvel[6:], kds)
@@ -231,7 +232,10 @@ if __name__ == "__main__":
                     # print("policy_input:", policy_input)
                     obs_tensor = torch.from_numpy(policy_input)
                     # policy inference
+                    # t0 = time.time()
+                    # print("t0:", t0)
                     action = policy(obs_tensor).detach().numpy().squeeze()
+                    # print(f"policy inference time: {time.time() - t0}s")
                     action = np.clip(action, -4., 4.)
                     # print("action:",action)
                     # transform action to target_dof_pos
@@ -245,8 +249,8 @@ if __name__ == "__main__":
                                             array_to_str(d.qpos[:3]), 
                                             array_to_str(d.qvel[:3])])
                 # Pick up changes to the physics state, apply perturbations, update options from GUI.
-                if step_counter % render_every_n_steps == 0:
-                    viewer.sync() 
+                # if step_counter % render_every_n_steps == 0:
+                viewer.sync() 
 
                 # Rudimentary time keeping, will drift relative to wall clock.
                 time_until_next_step = m.opt.timestep - (time.time() - step_start)

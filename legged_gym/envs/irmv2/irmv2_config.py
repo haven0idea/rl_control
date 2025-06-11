@@ -222,7 +222,7 @@ class IRMV2RoughCfgPPO( LeggedRobotCfgPPO ):
         entropy_coef_end = 0.0005
         entropy_coef_decay_iters = 5000
     class runner( LeggedRobotCfgPPO.runner ):
-        policy_class_name = "ActorCriticRecurrent"
+        policy_class_name = 'ActorCritic'
         max_iterations = 5000
         run_name = ''
         experiment_name = 'irmv2'

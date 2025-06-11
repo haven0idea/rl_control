@@ -1,6 +1,5 @@
-# 
-policy_path: "{LEGGED_GYM_ROOT_DIR}/deploy/pre_train/irmv2/policy_lstm_1.pt"
-# policy_path: "{LEGGED_GYM_ROOT_DIR}/deploy/deploy_mujoco/policy.onnx"
+policy_path: "{LEGGED_GYM_ROOT_DIR}/deploy/pre_train/irmv2/policy_1.pt"
+onnx_policy_path: "{LEGGED_GYM_ROOT_DIR}/deploy/deploy_real/irmv2_policy.onnx"
 xml_path: "{LEGGED_GYM_ROOT_DIR}/resources/robots/irmv_v2/scene.xml"
 
 # Total simulation time
