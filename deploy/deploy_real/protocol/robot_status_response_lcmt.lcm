@@ -1,0 +1,9 @@
+struct robot_status_response_lcmt
+{
+    int32_t     motion_id;                      // motion gait_id
+    int32_t     motor_num;                      // motor number
+    float       motor_pos[motor_num];           // motor position
+    float       motor_vel[motor_num];           // motor velocity
+    float       motor_torque[motor_num];        // motor torque
+    int32_t     motor_error[motor_num];         // motor error
+}

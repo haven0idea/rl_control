@@ -14,7 +14,7 @@ import threading
 from collections import deque
 # ------------------------------------------------------
 # 用于存储机器人的命令
-command_lock = threading.Lock()
+command_lock = threading.RLock()
 env_commands = [0, 0, 0, 0]  
 
 # 更新命令
@@ -161,21 +161,22 @@ if __name__ == "__main__":
     m = mujoco.MjModel.from_xml_path(xml_path)
     d = mujoco.MjData(m)
     m.opt.timestep = simulation_dt
-
+    # print("Load robot model is ok")
     # load policy
     policy = torch.jit.load(policy_path)
     hist_obs = deque()
     for _ in range(num_obs_frame):
         hist_obs.append(np.zeros([1, num_obs], dtype=np.float32))
-
+    # print("load policy model is ok")
     with mujoco.viewer.launch_passive(m, d) as viewer:
         # 创建及覆盖原文件
+        # print("mujoco.viewer is ok")
         with open(log_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['time', 'dof_pos_target', 'dof_pos_actual', 'dof_tau', 'base_pos', 'base_vel'])
         # Close the viewer automatically after simulation_duration wall-seconds.
         start = time.time()
-
+        # print("rewriter cvs is ok")
         # render_every_n_steps = 5
         # step_counter = 0
         try:

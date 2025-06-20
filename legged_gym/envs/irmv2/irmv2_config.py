@@ -2,7 +2,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class IRMV2RoughCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.42] # x,y,z [m]
+        pos = [0.0, 0.0, 0.52] # x,y,z [m]
         default_joint_angles = {  # = target angles [rad] when action = 0.0
             'Joint_hip_l_yaw': 0.,
             'Joint_hip_l_roll': 0.,
@@ -28,24 +28,24 @@ class IRMV2RoughCfg( LeggedRobotCfg ):
         num_privileged_obs = int (c_frame_stack * single_num_privileged_obs)
         num_actions = 10
 
-    # class terrain(LeggedRobotCfg.terrain):
-    #     # mesh_type = 'plane'
-    #     mesh_type = 'trimesh'
-    #     curriculum = False
-    #     # rough terrain only:
-    #     measure_heights = False
-    #     static_friction = 0.6
-    #     dynamic_friction = 0.6
-    #     terrain_length = 8.
-    #     terrain_width = 8.
-    #     num_rows = 20  # number of terrain rows (levels)
-    #     num_cols = 20  # number of terrain cols (types)
-    #     max_init_terrain_level = 10  # starting curriculum state
-    #     # plane; obstacles; uniform; slope_up; slope_down, stair_up, stair_down
-    #     # terrain_proportions = [0.2, 0.2, 0.4, 0.1, 0.1, 0, 0]
-    #     terrain_proportions = [0, 0, 0, 0, 0, 0.5, 0.5]
-    #     # 反弹
-    #     restitution = 0.0
+    class terrain:
+        mesh_type = 'heightfield' # none, plane, heightfield or trimesh
+        horizontal_scale = 0.1 # [m]
+        vertical_scale = 100 # [m]
+
+        terrain_length = 8.
+        terrain_width = 8.
+        border_size = 25 # [m]
+
+        num_rows= 20 # number of terrain rows (levels)
+        num_cols = 20 # number of terrain cols (types)
+
+        static_friction = 1.0
+        dynamic_friction = 1.0
+        restitution = 0.
+
+        noise_type = 'perlin'            # 噪声类型: 'perlin', 'gaussian', 'fractal'
+        noise_ratio = 1               # 地形中应用噪声的比例（剩余部分是平地）
 
     class commands:
         curriculum = False
@@ -103,14 +103,14 @@ class IRMV2RoughCfg( LeggedRobotCfg ):
         joint_armature_range = [0,0.005]    
 
         # 动作和观测延迟
-        add_cmd_action_latency = False
-        randomize_cmd_action_latency = False
-        range_cmd_action_latency = [1, 2]
-        add_obs_latency = False # no latency for obs_action
-        randomize_obs_motor_latency = False
-        randomize_obs_imu_latency = False
-        range_obs_motor_latency = [1, 2]
-        range_obs_imu_latency = [1, 2]
+        add_cmd_action_latency = True
+        randomize_cmd_action_latency = True
+        range_cmd_action_latency = [2, 10]
+        add_obs_latency = True # no latency for obs_action
+        randomize_obs_motor_latency = True
+        randomize_obs_imu_latency = True
+        range_obs_motor_latency = [2, 10]
+        range_obs_imu_latency = [2, 10]
       
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
@@ -161,7 +161,7 @@ class IRMV2RoughCfg( LeggedRobotCfg ):
             lin_vel_z = -1 #-1
             ang_vel_xy = -0.05 #-0.05
             orientation = -1.0
-            base_height = 0.05 #0.05
+            base_height = 0.2 #0.05
             dof_acc = -2.5e-7 #-2.5e-7
             dof_vel = -1e-3 #-1e-3
             collision = 0
@@ -169,19 +169,19 @@ class IRMV2RoughCfg( LeggedRobotCfg ):
             alive = 0.15 #0.15
             hip_pos = -1.0 #-1.0
             contact_no_vel = -0.2
-            feet_air_time = 1  
+            feet_air_time = 2 #1  
             contact = 0.18
             stand_still = -1.0 #-1.0
             torques = -5e-6 #-0.00001
             action_smoothness = -0.003 #-0.003
 
             foot_slip = -0.1 #-0.1
-            feet_swing_height = -20 #-20.0
+            feet_swing_height = -40 #-20.0
             joint_error = -0.25 #-0.25
             feet_distance = 0.2 #0.2
             knee_distance = 0.2 #0.2
             energy_square = -1e-4
-            track_vel_hard = 0.1 #0.5
+            track_vel_hard = 0.5 #0.5
             
     class normalization:
         class obs_scales:

@@ -1,0 +1,12 @@
+struct control_cmd_lcmt
+{
+    byte        action_type;                        // 0000 | pvat; for the lower 4 bits, once it's been set
+                                                    // the corresponding type of the cmd is active
+                                                    // Example: 8(1000) for position only, 12(1100) for position
+                                                    // and velocity.
+    int32_t     action_num;                         // motor number
+    float       action_position[action_num];        // position cmd
+    float       action_velocity[action_num];        // velocity cmd
+    float       action_acceleration[action_num];    // acceleration cmd
+    float       action_torque[action_num];          // torque cmd
+}

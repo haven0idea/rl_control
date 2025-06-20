@@ -32,7 +32,8 @@ class Terrain:
             self.curiculum()
         elif cfg.selected:
             self.selected_terrain()
-        else:    
+        else:
+            print("randomized_terrain!!!!!")    
             self.randomized_terrain()   
         
         self.heightsamples = self.height_field_raw
@@ -49,6 +50,7 @@ class Terrain:
 
             choice = np.random.uniform(0, 1)
             difficulty = np.random.choice([0.5, 0.75, 0.9])
+            print("make_terrain!!!!!")   
             terrain = self.make_terrain(choice, difficulty)
             self.add_terrain_to_map(terrain, i, j)
         
@@ -76,6 +78,46 @@ class Terrain:
             eval(terrain_type)(terrain, **self.cfg.terrain_kwargs.terrain_kwargs)
             self.add_terrain_to_map(terrain, i, j)
     
+    def terrain_perlin_noise(terrain, scale=10.0, octaves=4):
+        import noise  # 你可能需要安装 Perlin 噪声库 pip install noise
+
+        size_x, size_y = terrain.height_field_raw.shape
+        hf = np.zeros((size_x, size_y))
+
+        for i in range(size_x):
+            for j in range(size_y):
+                hf[i, j] = noise.pnoise2(i / scale, j / scale, octaves=octaves)
+
+        # normalize to [0, 1] and rescale to terrain height range
+        hf = (hf - hf.min()) / (hf.max() - hf.min())
+        terrain.height_field_raw = (hf * (1.0 / terrain.vertical_scale)).astype(np.int16)
+
+    def terrain_gaussian_noise(terrain, mean=0.0, std=0.05):
+        size_x, size_y = terrain.height_field_raw.shape
+        hf = np.random.normal(mean, std, (size_x, size_y))
+
+        hf = (hf - hf.min()) / (hf.max() - hf.min())
+        terrain.height_field_raw = (hf * (1.0 / terrain.vertical_scale)).astype(np.int16)
+
+    def terrain_fractal_noise(terrain, scale=10.0, octaves=6, persistence=0.5, lacunarity=2.0):
+        import noise
+
+        size_x, size_y = terrain.height_field_raw.shape
+        hf = np.zeros((size_x, size_y))
+        for i in range(size_x):
+            for j in range(size_y):
+                freq = scale
+                amp = 1.0
+                value = 0.0
+                for _ in range(octaves):
+                    value += amp * noise.pnoise2(i / freq, j / freq)
+                    freq *= lacunarity
+                    amp *= persistence
+                hf[i, j] = value
+
+        hf = (hf - hf.min()) / (hf.max() - hf.min())
+        terrain.height_field_raw = (hf * (1.0 / terrain.vertical_scale)).astype(np.int16)
+
     def make_terrain(self, choice, difficulty):
         terrain = terrain_utils.SubTerrain(   "terrain",
                                 width=self.width_per_env_pixels,
@@ -109,6 +151,9 @@ class Terrain:
             terrain_utils.stepping_stones_terrain(terrain, stone_size=stepping_stones_size, stone_distance=stone_distance, max_height=0., platform_size=4.)
         elif choice < self.proportions[6]:
             gap_terrain(terrain, gap_size=gap_size, platform_size=3.)
+        # 添加新地形类型分支
+        elif choice < self.proportions[7]:
+            terrain_perlin_noise(terrain)
         else:
             pit_terrain(terrain, depth=pit_depth, platform_size=4.)
         

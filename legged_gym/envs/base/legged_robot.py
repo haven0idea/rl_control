@@ -19,6 +19,9 @@ from legged_gym.utils.isaacgym_utils import get_euler_xyz as get_euler_xyz_in_te
 from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
 
+from noise import pnoise2
+import random
+
 class LeggedRobot(BaseTask):
     def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless):
         """ Parses the provided config file,
@@ -244,6 +247,7 @@ class LeggedRobot(BaseTask):
         self.up_axis_idx = 2 # 2 for z, 1 for y -> adapt gravity accordingly
         self.sim = self.gym.create_sim(self.sim_device_id, self.graphics_device_id, self.physics_engine, self.sim_params)
         self._create_ground_plane()
+        self._create_fractal_terrain_ground()
         self._create_envs()
 
     def set_camera(self, position, lookat):
@@ -673,6 +677,62 @@ class LeggedRobot(BaseTask):
         plane_params.dynamic_friction = self.cfg.terrain.dynamic_friction
         plane_params.restitution = self.cfg.terrain.restitution
         self.gym.add_ground(self.sim, plane_params)
+
+    def _create_fractal_terrain_ground(self):
+        """
+        生成并添加 fractal 噪声地形，参数在函数内部定义，不依赖外部 cfg。
+        """
+        target_height_range_m = 0.15
+        horizontal_scale = 0.05  # m 地形的分辨率
+        vertical_scale = 0.005     # m
+
+        border_size = 10        
+        noise_scale = 30.0       # 控制起伏大小
+        num_rows = 2
+        num_cols = 2
+        terrain_length = 5.
+        terrain_width = 5.
+        def generate_fractal_noise(rows, cols):
+            noise_map = np.zeros((rows, cols), dtype=np.float32)
+            for y in range(rows):
+                for x in range(cols):
+                    nx = x / noise_scale
+                    ny = y / noise_scale
+                    val = pnoise2(nx, ny, octaves=4, persistence=0.5, lacunarity=2.0,
+                                repeatx=cols, repeaty=rows, base=0)
+                    noise_map[y, x] = val
+            # 归一化到 [0, 1]
+            noise_map = (noise_map - noise_map.min()) / (noise_map.max() - noise_map.min())
+            return noise_map
+
+        border = int(border_size/horizontal_scale)
+        width_per_env_pixels = int(terrain_width / horizontal_scale)
+        length_per_env_pixels = int(terrain_length / horizontal_scale)
+
+        nb_rows = int(num_cols * width_per_env_pixels) + 2 * border
+        nb_cols = int(num_rows * length_per_env_pixels) + 2 * border
+        noise = generate_fractal_noise(nb_cols, nb_rows)  # 注意：行是 y（col），列是 x（row）
+
+        max_height_units = int(target_height_range_m / vertical_scale)
+
+        heightsamples = (noise * max_height_units).astype(np.int16)
+
+        hf_params = gymapi.HeightFieldParams()
+        hf_params.column_scale = horizontal_scale
+        hf_params.row_scale = horizontal_scale
+        hf_params.vertical_scale = vertical_scale
+        hf_params.nbRows = nb_rows
+        hf_params.nbColumns = nb_cols
+        hf_params.transform.p.x = -border_size 
+        hf_params.transform.p.y = -border_size
+        hf_params.transform.p.z = 0.0
+        hf_params.static_friction = self.cfg.terrain.static_friction
+        hf_params.dynamic_friction = self.cfg.terrain.dynamic_friction
+        hf_params.restitution = self.cfg.terrain.restitution
+
+        self.gym.add_heightfield(self.sim, heightsamples.flatten(), hf_params)
+
+        print("✅ Fractal terrain heightfield added (self-contained version).")
 
     def _create_envs(self):
         """ Creates environments:

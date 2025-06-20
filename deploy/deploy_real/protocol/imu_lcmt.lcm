@@ -1,0 +1,9 @@
+struct imu_lcmt
+{
+    float estAcc[3]; // imu acc
+    float estAngularRate[3]; // imu gyro
+    float estEulerAngle[3]; // roll, pitch and yaw
+    float gravityVec[3];
+    float q[4]; // x, y, z, w
+    int32_t status;
+}

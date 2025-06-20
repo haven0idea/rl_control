@@ -55,8 +55,8 @@
 
 
    
-  
-   <body name="base_link" pos="0 0 0.45" euler = "0 0 0">
+    <!-- 0.45 -->
+   <body name="base_link" pos="0 0 0.55" euler = "0 0 0">
     <freejoint name="float_base" />
     <inertial  pos="-0.015775 -3.32E-05 0.1209" mass="1.7973" fullinertia="0.017873 0.0011627 0.017859 -1.18E-06 -9.241E-05 -4.3E-07" />
     <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.75294 0.75294 0.75294 1" mesh="Link_base"/>

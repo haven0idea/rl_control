@@ -13,7 +13,7 @@ print(policy_jit_model.graph)
 test_input_tensor = torch.randn(1,39*10)  
 
 #specify the path and name of the output onnx model
-policy_onnx_model = f'{LEGGED_GYM_ROOT_DIR}/deploy/deploy_real/irmv2_policy.onnx'
+policy_onnx_model = f'{LEGGED_GYM_ROOT_DIR}/deploy/pre_train/irmv2/irmv2_policy.onnx'
 
 #export the onnx model
 torch.onnx.export(policy_jit_model,               

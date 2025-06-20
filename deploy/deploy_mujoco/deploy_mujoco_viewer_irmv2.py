@@ -19,7 +19,7 @@ import mujoco_viewer
 from collections import deque
 # ------------------------------------------------------
 # 用于存储机器人的命令
-command_lock = threading.Lock()
+command_lock = threading.RLock()
 env_commands = [0, 0, 0, 0]  
 
 # 更新命令
@@ -238,7 +238,7 @@ if __name__ == "__main__":
                 # policy inference
                 outputs = policy.run(None, {'input': obs_tensor.numpy()}) 
                 action = outputs[0]  # outputs 是一个包含所有输出的列表
-                action = action = action.squeeze()
+                action = action.squeeze()
                 action = np.clip(action, -4., 4.)
                 # transform action to target_dof_pos
                 target_dof_pos = action * action_scale + default_angles

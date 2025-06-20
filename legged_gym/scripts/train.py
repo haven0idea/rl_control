@@ -16,6 +16,6 @@ def train(args):
 if __name__ == '__main__':
     args = get_args()
     args.task = 'irmv2'
-    args.num_envs = 4096
-    args.run_name = "全域随机化"
+    args.num_envs = 2048
+    args.run_name = "增加0.05m分形噪声起伏地面"
     train(args)

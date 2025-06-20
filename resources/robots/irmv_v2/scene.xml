@@ -1,4 +1,4 @@
-<mujoco model="g1 scene">
+<mujoco model="irmv2 scene">
   <include file="irmv_v2_0319.xml"/>
 
   <statistic center="1.0 0.7 1.0" extent="0.8"/>
@@ -10,6 +10,11 @@
   </visual>
 
   <asset>
+    <!-- 用png文件不要用txt -->
+    <hfield name="hf_gaussian" file="../gaussian.png" size="5 5 0.1 0.5"/>
+    <hfield name="hf_perlin"   file="../perlin.png"   size="5 5 0.1 0.5" />
+    <hfield name="hf_fractal"  file="../fractal.png"  size="5 5 0.1 0.5" />
+
     <texture type="skybox" builtin="flat" rgb1="0 0 0" rgb2="0 0 0" width="512" height="3072"/>
     <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="300" height="300"/>
     <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
@@ -18,5 +23,8 @@
   <worldbody>
     <light pos="1 0 3.5" dir="0 0 -1" directional="true"/>
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+    <geom name="terrain" type="hfield" material="groundplane" hfield="hf_fractal"
+          pos="0 0 0" size="10 10 0.01" rgba="0.8 0.6 0.4 1" />
+
   </worldbody>
 </mujoco>
